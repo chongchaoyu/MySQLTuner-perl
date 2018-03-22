@@ -5878,7 +5878,7 @@ sub mysql_tables {
                 my $current_type =
                   uc($ctype) . ( $isnull eq 'NO' ? " NOT NULL" : "" );
                 my $optimal_type = select_str_g( "Optimal_fieldtype",
-                    "SELECT $_ FROM $dbname.$tbname PROCEDURE ANALYSE(100000)"
+                    "SELECT \`$_\` FROM $dbname.$tbname PROCEDURE ANALYSE(0, 0)"
                 );
 
                 if ( $current_type ne $optimal_type ) {
