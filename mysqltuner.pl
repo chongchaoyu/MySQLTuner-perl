@@ -86,6 +86,7 @@ my %opt = (
     "maxportallowed" => 0,
     "outputfile"     => 0,
     "dbstat"         => 0,
+    "tablestat"      => 0,
     "idxstat"        => 0,
     "sysstat"        => 0,
     "pfstat"         => 0,
@@ -112,7 +113,7 @@ GetOptions(
     'mysqlcmd=s',      'help',
     'buffers',         'skippassword',
     'passwordfile=s',  'outputfile=s',
-    'silent',          'dbstat',
+    'silent',          'dbstat',   'tablestat',
     'json',            'prettyjson',
     'idxstat',         'noask',
     'template=s',      'reportfile=s',
@@ -174,6 +175,7 @@ $basic_password_files = "/usr/share/mysqltuner/basic_passwords.txt"
 if ( $opt{verbose} ) {
     $opt{checkversion} = 1;    #Check for updates to MySQLTuner
     $opt{dbstat}       = 1;    #Print database information
+    $opt{tablestat}    = 1;    #Print table information
     $opt{idxstat}      = 1;    #Print index information
     $opt{sysstat}      = 1;    #Print index information
     $opt{buffers}      = 1;    #Print global and per-thread buffer values
@@ -5843,7 +5845,7 @@ sub mysql_databases {
 
 # Recommendations for database columns
 sub mysql_tables {
-    return if ( $opt{dbstat} == 0 );
+    return if ( $opt{tablestat} == 0 );
 
     subheaderprint "Table Column Metrics";
     unless ( mysql_version_ge( 5, 5 ) ) {
@@ -5878,10 +5880,10 @@ sub mysql_tables {
                 my $current_type =
                   uc($ctype) . ( $isnull eq 'NO' ? " NOT NULL" : "" );
                 my $optimal_type = select_str_g( "Optimal_fieldtype",
-                    "SELECT \`$_\` FROM $dbname.$tbname PROCEDURE ANALYSE(0, 0)"
+                    "SELECT $dbname.$tbname.$_ FROM $dbname.$tbname PROCEDURE ANALYSE(0, 0)"
                 );
 
-                if ( $current_type ne $optimal_type ) {
+                if ( $optimal_type && $current_type ne $optimal_type ) {
                     infoprint "      Current Fieldtype: $current_type";
                     infoprint "      Optimal Fieldtype: $optimal_type";
                     badprint
@@ -6244,6 +6246,7 @@ You must provide the remote server's total memory when connecting to other serve
  --noinfo                    Remove informational responses
  --debug                     Print debug information
  --dbstat                    Print database information
+ --tablestat                 Print table information
  --idxstat                   Print index information
  --sysstat                   Print system information
  --pfstat                    Print Performance schema
